@@ -43673,7 +43673,8 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 function _objectDestructuringEmpty(obj) { if (obj == null) throw new TypeError("Cannot destructure undefined"); }
 
-var username = prompt("what is your username");
+var username = prompt("what is your username"); // này là địa chỉ ip or domain của server
+
 var socket = (0, _socket.default)("http://localhost:3000", {
   transports: ["websocket", "polling"]
 });
@@ -43697,28 +43698,32 @@ var App = function App(_ref) {
       setMessages = _useState6[1];
 
   (0, _react.useEffect)(function () {
-    // gửi username user vừa nhập lên cho server
+    // Bước 1: gửi username user vừa nhập lên cho server
     socket.on("connect", function () {
       socket.emit("username", username);
-    }); // nhận data respon từ server vs key là "users"
+    }); // Bước 2: server sẽ respon về cho client trạng thái kết nối, nhận data respon từ server vs key là "connected"
+
+    socket.on("connected", function (user) {
+      console.log(user); //  setUsers((users) => [...users, user]);
+    }); // Bước 3: nhận data respon từ server vs key là "users"
 
     socket.on("users", function (users) {
+      console.log(users); // mỗi username gửi lên server, server sẽ lưu lại dưới dạng array và respon về cho client -> 1 user là 1 obj trong array
+
       setUsers(users);
-    }); // nhận data respon từ server vs key là "message"
+    }); // Bước 5: nhận data respon từ server vs key là "message"
 
     socket.on("message", function (message) {
+      console.log(message); // server respon object message về cho client, mỗi lần server respon vậy client lưu lại vào mảng
+
       setMessages(function (messages) {
         return [].concat(_toConsumableArray(messages), [message]);
       });
-    }); // nhận data respon từ server vs key là "connected"
-
-    socket.on("connected", function (user) {
-      setUsers(function (users) {
-        return [].concat(_toConsumableArray(users), [user]);
-      });
-    }); // nhận data respon từ server vs key là "disconnected"
+    }); // Bước 6: nhận data respon từ server vs key là "disconnected"
 
     socket.on("disconnected", function (id) {
+      console.log(id); // mỗi lần user nào tắt tab browser (disconnection) thì server sẽ respon id của user đó
+
       setUsers(function (users) {
         return users.filter(function (user) {
           return user.id !== id;
@@ -43728,7 +43733,8 @@ var App = function App(_ref) {
   }, []);
 
   var submit = function submit(event) {
-    event.preventDefault();
+    event.preventDefault(); // Bước 4: gửi message input lên cho server
+
     socket.emit("send", message);
     setMessage("");
   };

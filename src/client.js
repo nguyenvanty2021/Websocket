@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import moment from "moment";
 
 const username = prompt("what is your username");
-
+// này là địa chỉ ip or domain của server
 const socket = io("http://localhost:3000", {
   transports: ["websocket", "polling"],
 });
@@ -19,32 +19,39 @@ const App = ({}) => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    // gửi username user vừa nhập lên cho server
+    // Bước 1: gửi username user vừa nhập lên cho server
     socket.on("connect", () => {
       socket.emit("username", username);
     });
-    // nhận data respon từ server vs key là "users"
+    // Bước 2: server sẽ respon về cho client trạng thái kết nối, nhận data respon từ server vs key là "connected"
+    socket.on("connected", (user) => {
+      console.log(user);
+    //  setUsers((users) => [...users, user]);
+    });
+    // Bước 3: nhận data respon từ server vs key là "users"
     socket.on("users", (users) => {
+      console.log(users);
+      // mỗi username gửi lên server, server sẽ lưu lại dưới dạng array và respon về cho client -> 1 user là 1 obj trong array
       setUsers(users);
     });
-    // nhận data respon từ server vs key là "message"
+    // Bước 5: nhận data respon từ server vs key là "message"
     socket.on("message", (message) => {
+      console.log(message);
+      // server respon object message về cho client, mỗi lần server respon vậy client lưu lại vào mảng
       setMessages((messages) => [...messages, message]);
     });
-    // nhận data respon từ server vs key là "connected"
-    socket.on("connected", (user) => {
-      setUsers((users) => [...users, user]);
-    });
-    // nhận data respon từ server vs key là "disconnected"
+    // Bước 6: nhận data respon từ server vs key là "disconnected"
     socket.on("disconnected", (id) => {
+      console.log(id)
+      // mỗi lần user nào tắt tab browser (disconnection) thì server sẽ respon id của user đó
       setUsers((users) => {
         return users.filter((user) => user.id !== id);
       });
     });
   }, []);
-
   const submit = (event) => {
     event.preventDefault();
+    // Bước 4: gửi message input lên cho server
     socket.emit("send", message);
     setMessage("");
   };
